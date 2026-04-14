@@ -3,17 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>PCM Logística</title>
+  <title>PCM Control</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <style>
     body { background-color: #f8f9fa; font-size: 14px; }
     .oculto { display: none; }
     .card { border-radius: 12px; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 10px; }
-    .form-control, .form-select { font-size: 16px !important; }
-    .badge-status { padding: 8px; border-radius: 8px; font-size: 10px; font-weight: bold; color: white; display: block; text-align: center; text-transform: uppercase; border: none; width: 100%; }
+    .badge-status { padding: 8px; border-radius: 8px; font-size: 10px; font-weight: bold; color: white; display: block; text-align: center; text-transform: uppercase; }
     .bg-produccion { background-color: #0d6efd; } .bg-terminado { background-color: #6610f2; }
     .bg-facturado { background-color: #fd7e14; } .bg-pagado { background-color: #198754; }
-    .bg-enviado { background-color: #495057; } .bg-unknown { background-color: #212529; }
+    .bg-enviado { background-color: #6c757d; } .bg-unknown { background-color: #212529; }
     @media (max-width: 768px) {
       .table thead { display: none; }
       .table tr { display: block; background: white; margin-bottom: 10px; padding: 12px; border-radius: 10px; border: 1px solid #eee; }
@@ -26,7 +25,7 @@
 
   <div id="loginSection" class="mt-5 mx-auto" style="max-width: 350px;">
     <div class="card p-4">
-      <h4 class="text-center mb-4 fw-bold text-primary">PCM Logística</h4>
+      <h4 class="text-center mb-4 fw-bold">PCM Logística</h4>
       <form onsubmit="event.preventDefault(); intentarLogin();">
         <input type="text" id="user" name="username" class="form-control mb-2" placeholder="Usuario" autocomplete="username" required>
         <input type="password" id="pass" name="password" class="form-control mb-3" placeholder="Contraseña" autocomplete="current-password" required>
@@ -37,10 +36,7 @@
 
   <div id="mainSection" class="oculto">
     <div class="d-flex justify-content-between align-items-center mb-3 bg-white p-2 rounded shadow-sm">
-      <div style="font-size: 12px;">
-        <span id="nombreUser" class="fw-bold text-dark"></span> | 
-        <span id="deptoUser" class="text-primary fw-bold"></span>
-      </div>
+      <div style="font-size: 12px;"><span id="nombreUser" class="fw-bold text-dark"></span> | <span id="deptoUser" class="text-primary fw-bold"></span></div>
       <button class="btn btn-outline-danger btn-sm" onclick="location.reload()">Salir</button>
     </div>
 
@@ -59,28 +55,23 @@
             <option value="ENVIADO">5. ENVIADO (Logística)</option>
           </select>
         </div>
-        <div class="col-12 mt-2">
-          <button class="btn btn-dark w-100 fw-bold py-2" id="btnEjecutar" onclick="guardar()">EJECUTAR ACCIÓN</button>
-        </div>
+        <div class="col-12 mt-2"><button class="btn btn-dark w-100 fw-bold py-2" id="btnEjecutar" onclick="guardar()">EJECUTAR ACCIÓN</button></div>
       </div>
     </div>
 
     <div class="row g-2 mb-3">
-      <div class="col-9"><input type="text" id="buscador" class="form-control" placeholder="🔍 Buscar..." onkeyup="filtrar()"></div>
-      <div class="col-3"><button class="btn btn-primary w-100 fw-bold" onclick="cargarDatos()" id="btnAct">↻</button></div>
+      <div class="col-7"><input type="text" id="buscador" class="form-control" placeholder="🔍 Buscar..." onkeyup="filtrar()"></div>
+      <div class="col-2"><button class="btn btn-primary w-100 fw-bold" onclick="cargarDatos()" id="btnAct">↻</button></div>
+      <div class="col-3"><button class="btn btn-secondary w-100 fw-bold" id="btnLimpiar" onclick="limpiarEnviados()" disabled>🧹</button></div>
     </div>
 
-    <table class="table align-middle">
-      <tbody id="tablaCuerpo"></tbody>
-    </table>
+    <table class="table align-middle"><tbody id="tablaCuerpo"></tbody></table>
   </div>
 
   <datalist id="listaClientes"></datalist>
 
   <script>
-    // URL DE TU SCRIPT (YA ACTUALIZADA)
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyfftDLc9PzHXTJxFXKSuAm9WtSo_gfSLAm-TRz8SxiGgZa7yfFTh4B9u3bF3PT5WIdJg/exec"; 
-    
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwwRqeWPVw4lZRcLZ-Roiq3wdmLKHcYbyeS08lNLevFcStLMoyiiCRVaHOANhmqxCMdXA/exec"; 
     let USUARIO_ACTUAL = null;
     let BASE_CLIENTES = [];
 
@@ -88,20 +79,25 @@
       const u = document.getElementById('user').value;
       const p = document.getElementById('pass').value;
       const btn = document.getElementById('btnLogin');
-      btn.innerText = "Cargando..."; btn.disabled = true;
+      btn.innerText = "..."; btn.disabled = true;
       try {
         const r = await fetch(WEB_APP_URL);
         const d = await r.json();
-        const found = d.usuarios.find(x => x[0].toString().toLowerCase().trim() === u.toLowerCase().trim() && x[1].toString() === p);
+        const found = d.usuarios.find(x => x[0].toString().toLowerCase() === u.toLowerCase() && x[1].toString() === p);
         if(found) {
           USUARIO_ACTUAL = { nombre: found[2], depto: found[3] };
           document.getElementById('loginSection').classList.add('oculto');
           document.getElementById('mainSection').classList.remove('oculto');
           document.getElementById('nombreUser').innerText = USUARIO_ACTUAL.nombre;
           document.getElementById('deptoUser').innerText = USUARIO_ACTUAL.depto;
+          
+          if(found[3] === "Admin") {
+            document.getElementById('btnLimpiar').disabled = false;
+            document.getElementById('btnLimpiar').classList.replace('btn-secondary', 'btn-danger');
+          }
           actualizarInterfaz(d);
-        } else alert("Usuario o Contraseña incorrectos");
-      } catch(e) { alert("Error de conexión con el servidor"); }
+        } else alert("Datos incorrectos");
+      } catch(e) { alert("Error de conexión"); }
       btn.innerText = "ENTRAR"; btn.disabled = false;
     }
 
@@ -120,7 +116,7 @@
         else if (st.includes("ENVIADO")) cl = "bg-enviado";
         h += `<tr onclick="seleccionar('${p[0]}','${p[2]}','${p[1]}','${p[5]}','${p[7]}')">
           <td data-label="Folio"><strong>${p[0]}</strong></td>
-          <td data-label="Cliente">${p[2]} <small class="text-muted">(${p[1]})</small></td>
+          <td data-label="Cliente">${p[2]} <small>(${p[1]})</small></td>
           <td data-label="Pago" class="text-primary fw-bold">${p[5]}</td>
           <td data-label="Estatus"><span class="badge-status ${cl}">${p[7]}</span></td>
         </tr>`;
@@ -129,51 +125,44 @@
     }
 
     async function cargarDatos() {
-      const btn = document.getElementById('btnAct');
-      btn.innerText = "...";
       const r = await fetch(WEB_APP_URL);
       const d = await r.json();
       actualizarInterfaz(d);
-      btn.innerText = "↻";
+    }
+
+    async function limpiarEnviados() {
+      if(!confirm("¿Ocultar todos los pedidos ENVIADOS?")) return;
+      const btn = document.getElementById('btnLimpiar');
+      btn.disabled = true;
+      try {
+        const r = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'limpiarTabla' }) });
+        const res = await r.json();
+        alert(res.message);
+        cargarDatos();
+      } catch(e) { alert("Error"); }
+      btn.disabled = false;
     }
 
     async function guardar() {
       const btn = document.getElementById('btnEjecutar');
-      const body = { 
-        action: 'gestionarPedido', 
-        depto: USUARIO_ACTUAL.depto, 
-        datos: {
-          folio: document.getElementById('folio').value, 
-          nombre: document.getElementById('nombreCli').value,
-          numCliente: document.getElementById('numCli').value, 
-          porcentajePagado: document.getElementById('porcentaje').value,
-          nuevoEstatus: document.getElementById('estatusProceso').value
-        }
-      };
-      if(!body.datos.folio) return alert("Folio requerido");
-      btn.disabled = true; btn.innerText = "Procesando...";
+      const body = { action: 'gestionarPedido', depto: USUARIO_ACTUAL.depto, nombreUsuario: USUARIO_ACTUAL.nombre, datos: {
+        folio: document.getElementById('folio').value, nombre: document.getElementById('nombreCli').value,
+        numCliente: document.getElementById('numCli').value, porcentajePagado: document.getElementById('porcentaje').value,
+        nuevoEstatus: document.getElementById('estatusProceso').value
+      }};
+      btn.disabled = true; btn.innerText = "...";
       try {
         const r = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(body) });
         const res = await r.json();
-        if(res.result === "success") { 
-          alert(res.message); 
-          await cargarDatos(); 
-          // Limpiar campos tras registro exitoso
-          document.getElementById('folio').value = "";
-          document.getElementById('nombreCli').value = "";
-          document.getElementById('numCli').value = "";
-        } else alert(res.message);
-      } catch(e) { alert("Error al procesar la acción"); }
+        if(res.result === "success") { alert(res.message); cargarDatos(); } else alert(res.message);
+      } catch(e) { alert("Error"); }
       btn.disabled = false; btn.innerText = "EJECUTAR ACCIÓN";
     }
 
     function seleccionar(f, n, i, p, e) {
-      document.getElementById('folio').value = f; 
-      document.getElementById('nombreCli').value = n;
-      document.getElementById('numCli').value = i; 
-      document.getElementById('porcentaje').value = p.replace('%','');
-      document.getElementById('estatusProceso').value = e; 
-      window.scrollTo({top: 0, behavior: 'smooth'});
+      document.getElementById('folio').value = f; document.getElementById('nombreCli').value = n;
+      document.getElementById('numCli').value = i; document.getElementById('porcentaje').value = p.replace('%','');
+      document.getElementById('estatusProceso').value = e; window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
     document.getElementById('nombreCli').addEventListener('input', (e) => {
